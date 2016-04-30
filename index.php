@@ -1,157 +1,179 @@
 <?php
 session_start();
+require_once (__DIR__ . '/functions.inc.php');
 ini_set('error_reporting', error_reporting(E_ALL));
-define("ERR_VOID", "Feld leer");
-define("ERR_SPEC_CHAR", "Sonderzeichen nicht erlaubt");
 
-// Entgegennahme der Werte
-$parameter = $_POST ? $_POST:$_GET;
+// declare / init array for form text input fields for wishes and addresses
+$wishes_input_fields = array();
+$wishes_input_fields[] = array('name' => 'wish1', 'label' => 'Wunsch 1','value' => '');
+$wishes_input_fields[] = array('name' => 'wish2', 'label' => 'Wunsch 2','value' => '');
+$wishes_input_fields[] = array('name' => 'wish3', 'label' => 'Wunsch 3','value' => '');
 
-$_SESSION['errors'] = false;
-$_SESSION['sent_wishes'] = false;
+$address_input_fields = array();
+$address_input_fields[] = array('name' => 'vname', 'label' => 'Vorname','value' => '');
+$address_input_fields[] = array('name' => 'nname', 'label' => 'Nachname','value' => '');
+$address_input_fields[] = array('name' => 'plz', 'label' => 'PLZ','value' => '');
+$address_input_fields[] = array('name' => 'ort', 'label' => 'Ort','value' => '');
 
-
-var_dump($_POST);
-
-echo print_header();
-
+/* Seitenkopf */
+print_header();
+/* Begrüßung */
 if (!isset($_SESSION['visited'])) {
-    echo print_status ("Hallo Fremder");
+    echo print_headline ("Hallo zu &quot;Meine Wünsche&quot;",1);
     $_SESSION['visited'] = true;
     $_SESSION['errors'] = false;
     $_SESSION['sent_wishes'] = false;
+    $_SESSION['wishes_handling'] = true;
+    $_SESSION['address_handling'] = false;
+    $_SESSION['overview_handling'] = false;
 } else {
-    echo print_status ("Willkommen zurück");
-}
-
-if ($_SESSION['visited'] === true){
-    echo print_wish_form();
-    print_r($parameter);
-}
-
-if ($parameter['wishes_submit']){
-    echo "<h2>hallo</h2>";
-
-    //Jeden Wunsch auf Sonderzeichen prüfen
-    $check = false;
-    $error_arr = array();
-    $wishes = array('wish1' => $parameter['wish1'],'wish2' => $parameter['wish2'], 'wish3' => $parameter['wish3']);
-
-        foreach($wishes as $p => $v){
-            // wishes auf session_var
-            $_SESSION[$p] = $v;
-            /*if(check_input_field($v)){
-                //wenn falsch dann in error als fehlend
-            }
-            */
-            if(check_special_characters($v)){
-                //wenn falsch dann in error als Sonderzeichen
-            }
-
-        }
+    $_SESSION['wishes_handling'] = true;
 }
 
 
-if ($_SESSION['sent_wishes'] === true){
-    echo print_adress_form();
-}
-
-
-echo print_footer();
-echo processing_parameters($parameter);
-
-//session_destroy();
-
-
-//components
-/*
- * TO-DO Auslagern
+/* Behandlung der Post-Variablen:
+ * diese sollen auf Session-Variablen geschrieben werden, wenn
+ * diese sich unterscheiden in den entsprechenden Inhalten
  */
 
-function  processing_parameters ($param=0){
-    $return = "";
-    foreach($param as $p => $v){
-        $return .= check_input_field($v);
+//Entgegennahme der Post-Variablen
+// Wünsche
+if ($_POST['wishes_submit']){
+    $_SESSION['sent_wishes'] = true;
+    $error_messages = array();
+    $error_flag = false;
+    // Wenn neuer/anderer POST-Wert übergeben wurde
+    if ($_SESSION['wish1'] != $_POST['wish1']){
+        $_SESSION['wish1'] = $_POST['wish1'];
+
     }
+    //Prüfung ob leer oder Sonderzeichen
+    $error_messages[0] = check_input_field(trim($_SESSION['wish1']));
+    if(!empty($error_messages[0])){$error_flag = true;}
+    $wishes_input_fields[0]['value'] = $_SESSION['wish1'];
 
-    echo $return;
-
-}
-
-function print_wish_form(){
-    $wish1_val =  isset($_SESSION['wish1']) ? $_SESSION['wish1'] : "";
-    $wish2_val =  isset($_SESSION['wish2']) ? $_SESSION['wish2'] : "";
-    $wish3_val =  isset($_SESSION['wish3']) ? $_SESSION['wish3'] : "";
-
-    echo '<form action="index.php" method="post">';
-    echo '<label for="wish1">Wunsch 1</label><input name="wish1" id="wish1" type="text" value="'. $wish1_val .'"><br />';
-    echo '<label for="wish2">Wunsch 2</label><input name="wish2" id="wish2" type="text" value="'. $wish2_val .'"><br />';
-    echo '<label for="wish3">Wunsch 3</label><input name="wish3" id="wish3" type="text" value="'. $wish3_val .'"><br />';
-    echo '<input type="reset" id="wishes_reset" name="wishes_reset" value="Zurücksetzen">';
-    echo '<input type="submit" id="wishes_submit" name="wishes_submit" value="Senden">';
-    echo '</form>';
-}
-
-function print_adress_form(){
-    echo '<form action="index.php" method="post">';
-    echo '<label for="vorname">Text Field</label><input name="vorname" id="vorname" type="text"><br />';
-    echo '<label for="nachname">Text Field</label><input name="nachname" id="nachname" type="text"><br />';
-    echo '<label for="strasse">Text Field</label><input name="strasse" id="strasse" type="text"><br />';
-    echo '<input type="reset">';
-    echo '<input type="submit">';
-    echo '</form>';
-}
-
-
-
-
-function print_header(){
-echo <<< HEAD
-<!doctype html>
-<html lang="de">
-    <head>
-    <meta charset="utf-8">
-    <meta name="description" content="Wunschformular">
-    <meta name="keywords" content="">
-    <link rel="stylesheet" type="text/css" href="example.css" media="all">
-    <title>Einsendeaufgabe 2</title>
-    </head>
-    <body>
-HEAD;
-}
-
-function print_footer(){
-echo "<hr><p><h3>Kontrollausgabe</h3></p>";
-echo "<hr><pre>" . var_dump($_SESSION) . "</pre>";
-echo <<< FOOTER
- </body> </html>
-FOOTER;
-session_destroy();
-}
-
-
-function print_status($stat=""){
-
-    return "<h1>" .  $stat . "</h1>";
-
-}
-
-
-//Helper
-function check_input_field($input_field){
-    $error = "";
-    if (empty($input_field)){
-        $error = ERR_VOID;
+    if ($_SESSION['wish2'] != $_POST['wish2']){
+        $_SESSION['wish2'] = $_POST['wish2'];
     }
-    return $error;
+    $error_messages[1] = check_input_field(trim($_SESSION['wish2']));
+    if(!empty($error_messages[1])){$error_flag = true;}
+    $wishes_input_fields[1]['value'] = $_SESSION['wish2'];
+
+    if ($_SESSION['wish3'] != $_POST['wish3']){
+        $_SESSION['wish3'] = $_POST['wish3'];
+    }
+    $error_messages[2] = check_input_field(trim($_SESSION['wish3']));
+    if(!empty($error_messages[2])){$error_flag = true;}
+    $wishes_input_fields[2]['value'] = $_SESSION['wish3'];
+
+    if($error_flag === false){
+        //Umschalten zum nächsten Formular
+        $_SESSION['address_handling'] = true;
+        $_SESSION['wishes_handling'] = false;
+        $_SESSION['overview_handling'] = false;
+    }
 }
 
-function check_special_characters($temp){
-    return preg_match('/^[0-9a-z]+$/i', $temp);
+if ($_POST['address_submit']){
+    $_SESSION['sent_address'] = true;
+    $_SESSION['wishes_handling'] = false;
+    $_SESSION['overview_handling'] = false;
+    $_SESSION['sent_wishes'] = false;
+    $error_messages_ad = array();
+    $error_flag_ad = false;
+
+    //
+    // Wenn neuer/anderer POST-Wert übergeben wurde
+    if ($_SESSION['vname'] != $_POST['vname']){
+        $_SESSION['vname'] = $_POST['vname'];
+
+    }
+    //Prüfung ob leer oder Sonderzeichen
+    $error_messages_ad[0] = check_input_field(trim($_SESSION['vname']));
+    if(!empty($error_messages_ad[0])){$error_flag_ad = true;}
+    $address_input_fields[0]['value'] = $_SESSION['vname'];
+
+
+
+    if ($_SESSION['nname'] != $_POST['nname']){
+        $_SESSION['nname'] = $_POST['nname'];
+    }
+    $error_messages_ad[1] = check_input_field(trim($_SESSION['nname']));
+    if(!empty($error_messages_ad[1])){$error_flag_ad = true;}
+    $address_input_fields[1]['value'] = $_SESSION['nname'];
+
+
+
+    if ($_SESSION['plz'] != $_POST['plz']){
+        $_SESSION['plz'] = $_POST['plz'];
+    }
+    $error_messages_ad[2] = check_plz_field(trim($_SESSION['plz']));
+    if(!empty($error_messages_ad[2])){$error_flag_ad = true;}
+    $address_input_fields[2]['value'] = $_SESSION['plz'];
+
+    if ($_SESSION['ort'] != $_POST['ort']){
+        $_SESSION['ort'] = $_POST['ort'];
+    }
+    $error_messages_ad[3] = check_input_field(trim($_SESSION['ort']));
+    if(!empty($error_messages_ad[3])){$error_flag_ad = true;}
+    $address_input_fields[3]['value'] = $_SESSION['ort'];
+
+    if($error_flag_ad === false){
+        //Umschalten zum nächsten Formular
+        $_SESSION['address_handling'] = false;
+        $_SESSION['wishes_handling'] = false;
+        $_SESSION['overview_handling'] = true;
+    }
 }
+
+// Wenn das Wunschformular angezeigt werden soll
+if ($_SESSION['wishes_handling'] == true) {
+
+// Das Formular wird geschrieben
+    echo print_headline ("Meine Wünsche",1);
+    echo print_form();
+    for ($i = 0; $i <= 2; $i++) {
+        echo print_form_input_text_field($wishes_input_fields[$i]['name'],$wishes_input_fields[$i]['label'],25,100,trim($wishes_input_fields[$i]['value']));
+        if(!empty($error_messages[$i])){
+            echo "<pre class='red fett'> $error_messages[$i] </pre>";
+        }
+    }
+    echo print_form_reset_tag("wishes_reset");
+    echo print_form_submit_tag("wishes_submit");
+    echo print_form_ende_tag();
+}
+
+
+// next step
+if ( ($_SESSION['address_handling'] === true) && ($_SESSION['wishes_handling'] === false)  ){
+    echo print_headline ("Lieferangaben",1);
+    echo dump_wishes();
+
+    echo print_form();
+    for ($i = 0; $i <= 3; $i++) {
+        $size = ($address_input_fields[$i]['name'] == 'plz') ? 5:25;
+        $length = ($address_input_fields[$i]['name'] == 'plz') ? 5:100;
+        echo print_form_input_text_field($address_input_fields[$i]['name'],$address_input_fields[$i]['label'],$size,$maxlength,trim($address_input_fields[$i]['value']));
+        if(!empty($error_messages_ad[$i])){
+            echo "<pre class='red fett'> $error_messages_ad[$i] </pre>";
+        }
+    }
+    echo print_form_reset_tag("address_reset");
+    echo print_form_submit_tag("address_submit");
+    echo print_form_ende_tag();
+}
+
+// next step
+if ( ($_SESSION['address_handling'] === false) && ($_SESSION['wishes_handling'] === false)   && ($_SESSION['overview_handling'] === true) ){
+    echo print_headline ("Wunschübersicht",1);
+    echo dump_wishes();
+    echo dump_address();
+    session_destroy();
+}
+
+
+
+/* Fusszeile */
+print_footer(1);
 
 ?>
-
-
-
-
