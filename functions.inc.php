@@ -1,9 +1,9 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: jens
- * Date: 30.04.16
- * Time: 12:10
+ * Jens Knobloch
+ * jens.knobloch@stud.fh-luebeck.de
+ * 207845
+ *
  */
 
 // Formular schreiben: form-Tag
@@ -51,14 +51,14 @@ function print_header(){
 HEAD;
 }
 
-
+// Gibt den Footer aus
 function print_footer($debug = 0){
-// Debug modus
-if ($debug == 1) {
-    echo "<hr><p><h3>Kontrollausgabe</h3></p>";
-    echo "<hr><pre>" . var_dump($_SESSION) . "</pre>";
-}
-echo <<< FOOTER
+// 1= debug modus ; 0 = debug modus aus
+    if ($debug == 1) {
+        echo "<hr><p><h3>Kontrollausgabe</h3></p>";
+        echo "<hr><pre>" . var_dump($_SESSION) . "</pre>";
+    }
+    echo <<< FOOTER
  </body> </html>
 FOOTER;
 }
@@ -66,8 +66,8 @@ FOOTER;
 // helping functions
 function check_input_field($input_field){
     $error = "";
-    //
-    //'/[a-zA-Z0-9 äöüß]+$/i'
+    //'/[a-zA-Z0-9 äöüß]+$/i' /einfache Version
+    // False, wenn Zeichen, welche nicht zu dem Wertebereich gehören enthalten sind
      if (!preg_match("/^[A-Za-z 0-9\ü\è\ö\é\ä\à\Ä\Ö\Ü\-\.]*$/", $input_field)){
         $error = "Sonderzeichen sind nicht erlaubt!!";
     }
@@ -76,6 +76,7 @@ function check_input_field($input_field){
 
 function check_PLZ_field($input_field){
     $error = "";
+    // False, wenn keine fünf Ziffern enthalten sind
     if (!preg_match('/\d{5}/', $input_field)){
         $error = "Falsches PLZ-Format (fünfstellig und nur Ziffern)";
     }
@@ -95,4 +96,8 @@ function dump_address(){
     echo "PLZ  ... " . $_SESSION['plz'] . " Ort ... ";
     echo $_SESSION['ort'] . " ... <br>";
     echo "<hr>";
+}
+
+function print_error_messages($err=""){
+    return "<pre class='red fett'> " . $err. "</pre>";
 }
